@@ -3,8 +3,8 @@ package com.arkanoid.client.gameObj;
 import com.arkanoid.client.Arkanoid;
 
 public class Bat {
-    private int batWidth = 40;
-    private int batHeight = 10;
+    private int batWidth = 100;
+    private int batHeight = 25;
     private int  maxSpeed = 50;//px/sec
 
     private int position = 0;

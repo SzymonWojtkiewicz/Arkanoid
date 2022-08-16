@@ -6,6 +6,7 @@ public class Brick {
     private int brickX = 0;
     private int brickY = 0;
     public int hp = 1;
+    public int color = 1;//3-red, 2-blue, 1-yellow
 
     public Brick() {
     }
@@ -13,6 +14,7 @@ public class Brick {
         this.brickX = brickX;
         this.brickY = brickY;
         this.hp = hp;
+        this.color = hp;
         this.brickWidth = brickWidth;
         this.brickHeight = brickHeight;
     }

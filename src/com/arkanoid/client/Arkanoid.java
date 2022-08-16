@@ -5,6 +5,7 @@ import com.arkanoid.client.gameObj.Level;
 import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.ImageElement;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.*;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.*;
@@ -21,6 +22,7 @@ public class Arkanoid implements EntryPoint {
     /**
      * This is the entry point method.
      */
+    private int keyBordSensetivity = 10;
     public static int SpaceWidth = 800;
     public static int SpaceHeight = 800;
     public static int mposx = 0;
@@ -32,6 +34,9 @@ public class Arkanoid implements EntryPoint {
     public static int position = 0;
     public static int shiftvector = 0;
 
+    void startNewGame(){
+        gameLogic.ball.hasStarted = true;
+    }
     public void onModuleLoad() {
 
         /*
@@ -69,17 +74,59 @@ public class Arkanoid implements EntryPoint {
         canvas.setCoordinateSpaceWidth(SpaceWidth);
         canvas.setCoordinateSpaceHeight(SpaceHeight);
 
+
         canvas.setWidth("800px");
         canvas.setHeight("800px");
         gameLogic = new GameLogic();
-        RootPanel.get("canvas").add(canvas);
+        FocusPanel focusPanel = new FocusPanel();
+        //focusPanel.setSize("800px", "800px");
+        focusPanel.add(canvas);
+        focusPanel.setFocus(true);
+
+        //RootPanel.get("canvas").add(canvas);
+        RootPanel.get("focus").add(focusPanel);
         //
 
+        focusPanel.addKeyDownHandler(new KeyDownHandler() {
+            //@Override
+            public void onKeyDown(KeyDownEvent event) {
+                int key = event.getNativeKeyCode();
+                if (key == KeyCodes.KEY_LEFT) {
+                    mposx -= keyBordSensetivity;
+                    if(mposx < 0) {
+                        mposx = 0;
+                    }
+                } else if (key == KeyCodes.KEY_RIGHT) {
+                    mposx += keyBordSensetivity;
+                    if(mposx > SpaceWidth - gameLogic.bat.getBatWidth()) {
+                        mposx = SpaceWidth - gameLogic.bat.getBatWidth();
+                    }
+                }else if (key == KeyCodes.KEY_SPACE) {
+                    startNewGame();
+                }
+                //startNewGame();
+            }
+        });
+
+        canvas.addClickHandler(new ClickHandler() {
+
+            @Override
+            public void onClick(ClickEvent event) {
+                if(event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+                    startNewGame();
+                }
+                startNewGame();
+
+            }
+        });
 
         canvas.addMouseMoveHandler(new MouseMoveHandler() {
 
             @Override
             public void onMouseMove(MouseMoveEvent event) {
+
+                //startNewGame();
+                focusPanel.setFocus(true);
                 mposx = event.getX();
 
               //  label.setText(mposx + " move");
@@ -98,7 +145,9 @@ public class Arkanoid implements EntryPoint {
                 label.setText(mposx + " timer");
                 RootPanel.get("slot1").add(label);
                 //label2.setText("Speed: " + speed + "\nNewSpeed " + newSpeed +"\n Direction: " + direction + " \nPosition: " + position + " \nShiftvector: " + shiftvector);
-                label2.setText("    X rad" + Math.cos(Math.toRadians(gameLogic.ball.speedVector)) + "    Y rad" + Math.sin(Math.toRadians(gameLogic.ball.speedVector)));
+                //label2.setText("    X rad" + Math.cos(Math.toRadians(gameLogic.ball.speedVector)) + "    Y rad" + Math.sin(Math.toRadians(gameLogic.ball.speedVector)));
+                if(gameLogic.ball.hasStarted)
+                    label2.setText("    X rad" + Math.cos(Math.toRadians(gameLogic.ball.speedVector)) + "    Y rad" + Math.sin(Math.toRadians(gameLogic.ball.speedVector)));
                 RootPanel.get("slot2").add(label2);
             }
         };

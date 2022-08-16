@@ -5,9 +5,6 @@ import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.user.client.ui.Image;
 
-import java.util.List;
-import java.util.ListIterator;
-
 public class GameLogic {
     public Bat bat;
     public Ball ball;
@@ -20,11 +17,15 @@ public class GameLogic {
     Image batImage = new Image("images/bat.jpg");
     Image ballImage = new Image("images/Ball.svg");
 
-    Image[] brickImages = new Image[3];
+    String[] brickImagesColor = new String[3];
 
-    Image YBrickImage = new Image("images/YBrick.png");
-    Image BBrickImage = new Image("images/BBrick.png");
-    Image RBrickImage = new Image("images/RBrick.png");
+    String YBrickImage ="images/Bricks/YBricks/";
+    String BBrickImage = "images/Bricks/BBricks/";
+    String RBrickImage = "images/Bricks/RBricks/";
+
+    Image[][] brickImages = {{new Image(YBrickImage + "1Y.png")},
+            {new Image(BBrickImage + "1B.png"), new Image(BBrickImage + "2B.png")},
+            {new Image(RBrickImage + "1R.png"), new Image(RBrickImage + "2R.png"), new Image(RBrickImage + "3R.png")}};
 
 
 
@@ -32,9 +33,27 @@ public class GameLogic {
         bat = new Bat();
         ball = new Ball();
         level = new Level(44);
-        brickImages[0] = YBrickImage;
-        brickImages[1] = BBrickImage;
-        brickImages[2] = RBrickImage;
+
+        //creating brick images array dynamically
+        //dose not work for some reason
+
+        /*
+        //brickImages = new Image[brickImagesColor.length][];
+
+        brickImagesColor[0] = YBrickImage;
+        brickImagesColor[1] = BBrickImage;
+        brickImagesColor[2] = RBrickImage;
+
+        /*
+        for(int i = 0; i < brickImagesColor.length; i++) {
+            brickImages[i] = new Image[i + 1];
+            for(int j = 0; j < i + 1; j++) {
+                brickImages[i][j] = new Image(brickImagesColor[i] + (j+1) + ".png");
+            }
+        }
+        */
+
+
     }
 
     public Context2d mainGameLoop(Context2d context, int finalVectorUnProc) {
@@ -42,7 +61,7 @@ public class GameLogic {
         context.clearRect(0, 0, Arkanoid.SpaceWidth, Arkanoid.SpaceHeight);
         //draw background
 
-        //context.drawImage(ImageElement.as(background.getElement()), 0, 0);
+        context.drawImage(ImageElement.as(background.getElement()), 0, 0);
 
         //draw bat
 
@@ -55,8 +74,12 @@ public class GameLogic {
 //int i = 0;
 //int j = 0;
         for (Brick brick : level.bricks) {
-            context.drawImage(ImageElement.as(ImageElement.as(brickImages[brick.hp - 1].getElement())), brick.getBrickX(), brick.getBrickY(), brick.getBrickWidth(), brick.getBrickHeight());
-           // context.drawImage(ImageElement.as(ImageElement.as(brickImages[brick.hp - 1].getElement())), i, j, brick.getBrickWidth(), brick.getBrickHeight());
+            if(brick.hp == 0) {
+                continue;
+            }
+           context.drawImage(ImageElement.as(ImageElement.as(brickImages[brick.color - 1][brick.hp - 1].getElement())), brick.getBrickX(), brick.getBrickY(), brick.getBrickWidth(), brick.getBrickHeight());
+          //  context.drawImage(ImageElement.as(ImageElement.as(brickImages[0][0].getElement())), brick.getBrickX(), brick.getBrickY(), brick.getBrickWidth(), brick.getBrickHeight());
+            // context.drawImage(ImageElement.as(ImageElement.as(brickImages[brick.hp - 1].getElement())), i, j, brick.getBrickWidth(), brick.getBrickHeight());
             //i += brick.getBrickWidth();
            // if (i >= Arkanoid.SpaceWidth) {
           //      i = 0;
