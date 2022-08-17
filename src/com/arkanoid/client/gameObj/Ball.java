@@ -3,17 +3,24 @@ package com.arkanoid.client.gameObj;
 import com.arkanoid.client.Arkanoid;
 
 public class Ball {
-    private int speed = 1; //px/ms
+    private int speed = 150; //px/ms
     private int X = 400;
     private int Y = 700;
     private int radius = 30;
-    public int speedVector = 270;//for now lets just say 0 to 360 in degrees
+    public int speedVector = 270;//for now lets just say 0 to 360 in degrees 270 for up 0 for right
     public boolean hasStarted = false;
     public boolean hasEnded = false;
-
+    public static int difficulty = 1;
     public Ball() {
     }
 
+    public int getSpeed() {
+        return speed;
+    }
+    public int setSpeed(int speed) {
+        this.speed = speed;
+        return speed;
+    }
     public int getX() {
         return X;
     }
@@ -26,10 +33,14 @@ public class Ball {
 
     public boolean move(){
 
-        if(hasStarted == false) {
+        if(hasStarted == false && hasEnded == false){
             this.X = Arkanoid.gameLogic.bat.getPosition() + (Arkanoid.gameLogic.bat.getBatWidth() - this.radius)/2;
             this.Y = Arkanoid.SpaceHeight - Arkanoid.gameLogic.bat.getBatHeight() - this.radius;
             return true;
+        }
+        if(hasStarted == true && hasEnded == true){
+            return false;
+
         }
         //bug fix
         if(this.speedVector > 359) {
@@ -41,28 +52,40 @@ public class Ball {
         }
 
         int frameDuration = Level.getFrameMs();
-        int newX = (int)(this.X + this.speed * frameDuration * Math.cos(Math.toRadians(this.speedVector))/5);
-        int newY = (int)(this.Y + this.speed * frameDuration * Math.sin(Math.toRadians(this.speedVector))/5);
+        int newX = (int)(this.X + this.speed * difficulty * frameDuration * Math.cos(Math.toRadians(this.speedVector))/500);
+        int newY = (int)(this.Y + this.speed * difficulty * frameDuration * Math.sin(Math.toRadians(this.speedVector))/500);
 
         //checking collisions
 
 
         //collisions with bat
 
-        if(newY > Arkanoid.SpaceHeight - Arkanoid.gameLogic.bat.getBatHeight() - this.radius/2){
-            if(newX > Arkanoid.gameLogic.bat.getPosition() && newX < Arkanoid.gameLogic.bat.getPosition() + Arkanoid.gameLogic.bat.getBatWidth()){
+        if(newY > Arkanoid.SpaceHeight - Arkanoid.gameLogic.bat.getBatHeight() - this.radius){
+            if(newX > Arkanoid.gameLogic.bat.getPosition() - 3 * radius /4 && newX < Arkanoid.gameLogic.bat.getPosition() + Arkanoid.gameLogic.bat.getBatWidth() + 3 * radius /4){
                 this.speedVector = (int)(210 + 120 * (newX - Arkanoid.gameLogic.bat.getPosition())/Arkanoid.gameLogic.bat.getBatWidth());
                 this.X = newX;
+                Arkanoid.batHit.play();
                 return true;
             }else{
-                return false;
+                if(newY > Arkanoid.SpaceHeight - this.radius){
+                    this.hasEnded = true;
+                    this.hasStarted = true;
+                    this.X = newX;
+                    this.Y = Arkanoid.SpaceHeight - this.radius;
+                    Arkanoid.lostlife.play();
+                    return false;
+                }
+                this.X = newX;
+                this.Y = newY;
+
+                return true;
             }
         }
 
         //collisions with walls
 
             //upper wall
-        if(newY < this.radius){
+        if(newY < 0){
 
 
             if(this.speedVector > 180){
@@ -73,16 +96,16 @@ public class Ball {
             }
             //bug fix
             if(this.speedVector < 5 || this.speedVector > 355){
-                this.speedVector = 5;
+                this.speedVector = 10;
             }
             if(this.speedVector < 185 && this.speedVector > 175){
-                this.speedVector = 185;
+                this.speedVector = 190;
             }
 
+            Arkanoid.wallHit.play();
 
+            this.Y = 0;
 
-            this.Y = this.radius;
-            //this.X = newX;
             return true;
         }
             //side walls
@@ -93,15 +116,16 @@ public class Ball {
             else{
                 this.speedVector = 180 - this.speedVector;// not need?
             }
-            this.X = this.radius;
+            this.X = 0;//this.radius;
             this.Y = newY;
             //bug fix
             if(this.speedVector < 275 && this.speedVector > 265){
-                this.speedVector = 275;
+                this.speedVector = 280;
             }
             if(this.speedVector < 95 && this.speedVector > 85){
-                this.speedVector = 85;
+                this.speedVector = 80;
             }
+            Arkanoid.wallHit.play();
             return true;
         }
         if(newX > Arkanoid.SpaceWidth - this.radius){
@@ -115,11 +139,12 @@ public class Ball {
             this.Y = newY;
             //bug fix
             if(this.speedVector < 275 && this.speedVector > 265){
-                this.speedVector = 265;
+                this.speedVector = 270;
             }
             if(this.speedVector < 95 && this.speedVector > 85){
-                this.speedVector = 95;
+                this.speedVector = 100;
             }
+            Arkanoid.wallHit.play();
             return true;
         }
 
@@ -139,12 +164,16 @@ public class Ball {
                 continue;
             }
             if(newX + this.radius > brick.getBrickX() && newX < brick.getBrickX() + brick.getBrickWidth() && newY + this.radius > brick.getBrickY() && newY < brick.getBrickY() + brick.getBrickHeight()){
-                this.speedVector = 180 + this.speedVector;
+                if(X + this.radius > brick.getBrickX() && X < brick.getBrickX() + brick.getBrickWidth())
+                    this.speedVector = 360 - this.speedVector;//collision with horizontal side of brick
+                else
+                    this.speedVector = 180 - this.speedVector;//collision with vertical side of brick
 
-                //this.X = newX;
-               // this.Y = newY;
+
                 brick.hp--;
-
+                if(brick.hp == 0)
+                    Arkanoid.brake.play();
+                Arkanoid.crack.play();
                 return true;
             }
         }

@@ -2,15 +2,13 @@ package com.arkanoid.client;
 
 import com.arkanoid.client.gameObj.GameLogic;
 import com.arkanoid.client.gameObj.Level;
-import com.google.gwt.canvas.dom.client.Context2d;
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.*;
+import com.google.gwt.media.client.Audio;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.canvas.client.Canvas;
 
 /**
@@ -28,40 +26,73 @@ public class Arkanoid implements EntryPoint {
     public static int mposx = 0;
     public static GameLogic gameLogic;
 
+    private boolean playmusic = false;
+
     public static int speed = 0;
     public static int newSpeed = 0;
     public static int direction = 0;
     public static int position = 0;
     public static int shiftvector = 0;
 
+    public static Audio prePlay;
+    public static Audio gamePlay;
+    public static Audio gameOver;
+
+    public static Audio batHit;
+    public static Audio crack;
+    public static Audio brake;
+    public static Audio lostlife;
+    public static Audio wallHit;
+
+
     void startNewGame(){
         gameLogic.ball.hasStarted = true;
+        gameLogic.newGameStarted = true;
     }
     public void onModuleLoad() {
 
-        /*
-        final Button button = new Button("Click me");
-        final Label label = new Label();
+        prePlay = Audio.createIfSupported();
+        prePlay.getAudioElement().setSrc("sounds/prePlay.wav");
+        prePlay.setVolume(0.3);
+        prePlay.setLoop(true);
+        prePlay.play();
+        RootPanel.get("prePlay").add(prePlay);
 
-        button.addClickHandler(new ClickHandler() {
-            public void onClick(ClickEvent event) {
-                if (label.getText().equals("")) {
-                    ArkanoidService.App.getInstance().getMessage("Hello, World!", new MyAsyncCallback(label));
-                } else {
-                    label.setText("");
-                }
-            }
-        });
+        gamePlay = Audio.createIfSupported();
+        gamePlay.getAudioElement().setSrc("sounds/gamePlay.wav");
+        gamePlay.setVolume(0.3);
+        gamePlay.setLoop(true);
+        RootPanel.get("gamePlay").add(gamePlay);
 
-        // Assume that the host HTML has elements defined whose
-        // IDs are "slot1", "slot2".  In a real app, you probably would not want
-        // to hard-code IDs.  Instead, you could, for example, search for all
-        // elements with a particular CSS class and replace them with widgets.
-        //
-        //RootPanel.get("slot1").add(button);
-        //RootPanel.get("slot2").add(label);
+        gameOver = Audio.createIfSupported();
+        gameOver.getAudioElement().setSrc("sounds/gameOver.wav");
+        gameOver.setVolume(0.3);
+        gameOver.setLoop(true);
+        RootPanel.get("gameOver").add(gameOver);
 
-         */
+        batHit = Audio.createIfSupported();
+        batHit.getAudioElement().setSrc("sounds/batHit.wav");
+        RootPanel.get("batHit").add(batHit);
+
+        crack = Audio.createIfSupported();
+        crack.getAudioElement().setSrc("sounds/crack.wav");
+        RootPanel.get("crack").add(crack);
+
+        brake = Audio.createIfSupported();
+        brake.getAudioElement().setSrc("sounds/brake.wav");
+        RootPanel.get("brake").add(brake);
+
+        lostlife = Audio.createIfSupported();
+        lostlife.getAudioElement().setSrc("sounds/lostlife.wav");
+        RootPanel.get("lostlife").add(lostlife);
+
+        wallHit = Audio.createIfSupported();
+        wallHit.getAudioElement().setSrc("sounds/wallHit.wav");
+        RootPanel.get("wallHit").add(wallHit);
+
+
+
+
         final Canvas canvas = Canvas.createIfSupported();
         final Label label = new Label();
         label.setText("Hello, World!");
@@ -79,13 +110,12 @@ public class Arkanoid implements EntryPoint {
         canvas.setHeight("800px");
         gameLogic = new GameLogic();
         FocusPanel focusPanel = new FocusPanel();
-        //focusPanel.setSize("800px", "800px");
         focusPanel.add(canvas);
         focusPanel.setFocus(true);
 
-        //RootPanel.get("canvas").add(canvas);
+
         RootPanel.get("focus").add(focusPanel);
-        //
+
 
         focusPanel.addKeyDownHandler(new KeyDownHandler() {
             //@Override
@@ -103,8 +133,15 @@ public class Arkanoid implements EntryPoint {
                     }
                 }else if (key == KeyCodes.KEY_SPACE) {
                     startNewGame();
+
+                }else if(key == KeyCodes.KEY_UP) {
+                    if(gameLogic.ball.difficulty< 10 && !gameLogic.newGameStarted)
+                        gameLogic.ball.difficulty++;
+                }else if(key == KeyCodes.KEY_DOWN) {
+                    if(gameLogic.ball.difficulty> 2 && !gameLogic.newGameStarted)
+                        gameLogic.ball.difficulty--;
                 }
-                //startNewGame();
+
             }
         });
 
@@ -125,14 +162,10 @@ public class Arkanoid implements EntryPoint {
             @Override
             public void onMouseMove(MouseMoveEvent event) {
 
-                //startNewGame();
                 focusPanel.setFocus(true);
                 mposx = event.getX();
 
-              //  label.setText(mposx + " move");
-              //  RootPanel.get("slot1").add(label);
-               // label.setText(gameLogic.level.bricks.size() + "");
-               // RootPanel.get("slot1").add(label);
+
             }
         });
 
@@ -140,14 +173,18 @@ public class Arkanoid implements EntryPoint {
             @Override
             public void run() {
 
+                if(playmusic = false){
+                    prePlay.play();
+                    playmusic = true;
+                }
                 gameLogic.mainGameLoop(canvas.getContext2d(), mposx);
                 RootPanel.get("canvas").add(canvas);
                 label.setText(mposx + " timer");
                 RootPanel.get("slot1").add(label);
-                //label2.setText("Speed: " + speed + "\nNewSpeed " + newSpeed +"\n Direction: " + direction + " \nPosition: " + position + " \nShiftvector: " + shiftvector);
-                //label2.setText("    X rad" + Math.cos(Math.toRadians(gameLogic.ball.speedVector)) + "    Y rad" + Math.sin(Math.toRadians(gameLogic.ball.speedVector)));
+
                 if(gameLogic.ball.hasStarted)
-                    label2.setText("    X rad" + Math.cos(Math.toRadians(gameLogic.ball.speedVector)) + "    Y rad" + Math.sin(Math.toRadians(gameLogic.ball.speedVector)));
+                    label2.setText(" " + gameLogic.time);
+                    //label2.setText("    X rad" + Math.cos(Math.toRadians(gameLogic.ball.speedVector)) + "    Y rad" + Math.sin(Math.toRadians(gameLogic.ball.speedVector)));
                 RootPanel.get("slot2").add(label2);
             }
         };
@@ -155,46 +192,6 @@ public class Arkanoid implements EntryPoint {
 
 
 
-
-
-
-
-       // while(true){
-
-            //Context2d context = canvas.getContext2d();
-
-        //}
-
-    //   Context2d context = canvas.getContext2d();
-    //   Image image = new Image("Untitled.jpg");
-    //   final ImageElement imageElement = ImageElement.as(image.getElement());
-        /*image.addLoadHandler(new LoadHandler() {
-            @Override
-            public void onLoad(LoadEvent event) {
-                context.drawImage(imageElement, 0, 0);
-            }
-        });*/
-     //    context.drawImage(imageElement, 0, 0);
-        //RootPanel.get("canvas").add(image);
-    //    RootPanel.get("canvas").add(canvas);
-
-
-
     }
 
-    private static class MyAsyncCallback implements AsyncCallback<String> {
-        private Label label;
-
-        MyAsyncCallback(Label label) {
-            this.label = label;
-        }
-
-        public void onSuccess(String result) {
-            label.getElement().setInnerHTML(result);
-        }
-
-        public void onFailure(Throwable throwable) {
-            label.setText("Failed to receive answer from server!");
-        }
-    }
 }
